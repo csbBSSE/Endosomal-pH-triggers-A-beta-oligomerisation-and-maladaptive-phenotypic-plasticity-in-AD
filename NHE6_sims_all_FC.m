@@ -178,10 +178,10 @@ Pk =  7.1e-7;                %{K+ permeability}
 Pna = 9.6e-7;                %{Na+ permeability}
 Pw = 0.0;                    %{Water permeability}
 N_VATP = 40;%55;               %{Number of V-ATPases}
-N_CLC = 60;%100;                 %{Number of ClC-7 antiporters}
+N_CLC = 60;%100;                 %{Number of ClC antiporters}
 
-CLC_Cl = 2;                  %{ClC-7 Cl- Stoichiometry}
-CLC_H = 1;                   %{ClC-7 H+ Stoichiometry}
+CLC_Cl = 2;                  %{ClC Cl- Stoichiometry}
+CLC_H = 1;                   %{ClC H+ Stoichiometry}
 
 Oc = 0.291;                  %{Cytoplasmic Osmolarity [M]}
 oh =  0.73;                  %{H+ Osmotic coefficient}
@@ -226,13 +226,13 @@ psi_total = psi + psi_out-psi_in;        %{total membrane potential [mV]}
 Pump_flux = 1*proton_flux(pHi,psi);       %{V-ATPase surface [H+/sec]}
 Hpump = N_VATP*Pump_flux;                 %{total proton pump flow [H+/sec]}
  
-% ClC-7 Antiporter
-clc7f = (CLC_Cl+CLC_H)*psi + RTF*(2.3*(pHe - pHi) + CLC_Cl*log(Cle/Cli));
-G1 = -0.3*clc7f;
-G3 = -1.5E-5*clc7f^3;
-S = 0.5+0.5*tanh((clc7f+250)/75);
-CLC7_rate = S*G1+(1-S)*G3;
-CLC7 = N_CLC*CLC7_rate  ;                 %{total ClC-7 turnover [1/sec]}
+% ClC Antiporter
+clcf = (CLC_Cl+CLC_H)*psi + RTF*(2.3*(pHe - pHi) + CLC_Cl*log(Cle/Cli));
+G1 = -0.3*clcf;
+G3 = -1.5E-5*clcf^3;
+S = 0.5+0.5*tanh((clcf+250)/75);
+CLC_rate = S*G1+(1-S)*G3;
+CLC = N_CLC*CLC_rate  ;                 %{total ClC turnover [1/sec]}
 
 % NHE6 activity
 nhe6f = RTF*log((Nai*(10^(-pHe)))/((10^(-pHi)*Nae)));
@@ -245,22 +245,6 @@ Nnhe6 = fold_changes_nhe6*100;%50;
 % 170 since power in Pnhe is 10. Will change accordingly
 NHE6 = Nnhe6*NHE6_rate;
 
-% % % NHE9 activity
-% nhe9f = RTF*log((Ki*(10^(-pHe)))/((10^(-pHi)*Ke)));
-% Vnhe = 1500; % s^-1
-% Knhe = 3*RTF;
-% % if pHi<6.55
-% %     Pnhe = 1;
-% % elseif pHi>=6.55 && pHi<7.25
-% %     Pnhe = 0.25;%(7.25-pHe)/0.7;
-% % elseif pHi>=7.25
-% %     Pnhe = 0;
-% % end
-% % Pnhe = 0.1;
-% Pnhe = 0.14/(1+((pHi/6.85)^50));
-% NHE9_rate = (Pnhe^2)*Vnhe*(nhe9f/(Knhe+abs(nhe9f)));
-% Nnhe9 = 200;
-% NHE9 = Nnhe9*NHE9_rate;
 
 
 % Treatment of singular terms for passive ion flux
@@ -279,11 +263,11 @@ Naflow = Pna*SA*(Nae*exp(-psi/RTF)-Nai)*gg*mole/1000;
 Jw = Pw*SA*(oh*10^(-pH) + ok*K + ona*Na + ocl*Cl + Q/V - Oc);
 
 
-dydt(1) = ((-Hpump - Hflow - (CLC_H)*CLC7 -NHE6 )/V/mole)/(beta);
-dydt(2) = - CLC_Cl*CLC7 + Clflow;
+dydt(1) = ((-Hpump - Hflow - (CLC_H)*CLC -NHE6 )/V/mole)/(beta);
+dydt(2) = - CLC_Cl*CLC + Clflow;
 dydt(3) = + Kflow ;
 dydt(4) = + Naflow ;
-dydt(5) = Hpump + Hflow + (CLC_H)*CLC7 -NHE6 ;
+dydt(5) = Hpump + Hflow + (CLC_H)*CLC -NHE6 ;
 dydt(6) = Jw/(1000*55);
 
 end
